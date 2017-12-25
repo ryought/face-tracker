@@ -154,16 +154,18 @@
 
         /******* multi face tracking ***********/
         var objects = new tracking.ObjectTracker(['face']);
+        var faceRegions = {};
+
         objects.on('track', function(event) {
           if (event.data.length === 0) {
             // no detected
           } else {
-            event.data.forEach(function(rect) {
-              console.log('[tracking.js] ', rect);
+            event.data.forEach(function(rect, index) {
+              faceRegions[index] = rect
             });
           }
         })
-        tracking.track('#videoel', objects);
+        //tracking.track('#videoel', objects);
 
 				/*********** Code for face tracking *********/
 
@@ -171,6 +173,11 @@
 				ctrack.init();
 				var trackingStarted = false;
         var boushi = document.getElementById('boushi')
+
+        function trackingByRegion(rect) {
+          var box = [rect.x, rect.y, rect.width, rect.height];
+          ctrack.start(vid, box);
+        }
 
 				function startVideo() {
 					// start video
@@ -183,6 +190,7 @@
 				}
 
 				function drawLoop() {
+          //console.log('[f]', faceRegions);
 					requestAnimFrame(drawLoop);
 					overlayCC.clearRect(0, 0, vid_width, vid_height);
 					//psrElement.innerHTML = "score :" + ctrack.getScore().toFixed(4);

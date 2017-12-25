@@ -4,3 +4,6 @@
 [submodule "tracking.js"]
 	path = tracking.js
 	url = https://github.com/eduardolundgren/tracking.js.git
+[submodule "js-objectdetect"]
+	path = js-objectdetect
+	url = https://github.com/mtschirs/js-objectdetect.git
