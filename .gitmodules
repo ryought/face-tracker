@@ -1,3 +1,6 @@
 [submodule "clmtrackr"]
 	path = clmtrackr
 	url = https://github.com/auduno/clmtrackr.git
+[submodule "tracking.js"]
+	path = tracking.js
+	url = https://github.com/eduardolundgren/tracking.js.git

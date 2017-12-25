@@ -55,6 +55,8 @@
 		<script src="./clmtrackr/examples/js/libs/utils.js"></script>
 		<script src="./clmtrackr/build/clmtrackr.js"></script>
 		<script src="./clmtrackr/examples/js/libs/Stats.js"></script>
+    <script src="./tracking.js/build/tracking-min.js"></script>
+    <script src="./tracking.js/build/data/face-min.js"></script>
 		<div id="content">
 			<h2>Facetracking example</h2>
 			<div id="container">
@@ -149,6 +151,19 @@
 				}
 
 				vid.addEventListener('canplay', enablestart, false);
+
+        /******* multi face tracking ***********/
+        var objects = new tracking.ObjectTracker(['face']);
+        objects.on('track', function(event) {
+          if (event.data.length === 0) {
+            // no detected
+          } else {
+            event.data.forEach(function(rect) {
+              console.log('[tracking.js] ', rect);
+            });
+          }
+        })
+        tracking.track('#videoel', objects);
 
 				/*********** Code for face tracking *********/
 
