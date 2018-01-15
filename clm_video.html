@@ -67,7 +67,11 @@
 				<canvas id="overlay" width="400" height="300"></canvas>
 			</div>
 			<br/>
-      <img src="./overlay2.png" id="boushi" style="display: none" ></img>
+      <img src="./overlay2.png" id="boushi" class="hide" ></img>
+      <img src="./assets/cheek.png" id="cheek" class="hide" ></img>
+      <img src="./assets/nose1.png" id="nose1" class="hide" ></img>
+      <img src="./assets/nose2.png" id="nose2" class="hide" ></img>
+      <img src="./assets/head.png" id="head" class="hide" ></img>
 
 			<script>
 				var vid = document.getElementById('videoel');
@@ -173,7 +177,12 @@
 				var ctrack = new clm.tracker();
 				ctrack.init();
 				var trackingStarted = false;
+
         var boushi = document.getElementById('boushi')
+        var cheek = document.getElementById('cheek')
+        var nose1 = document.getElementById('nose1')
+        var nose2 = document.getElementById('nose2')
+        var head = document.getElementById('head')
 
         function trackingByRegion(rect) {
           var box = [rect.x, rect.y, rect.width, rect.height];
@@ -203,9 +212,68 @@
           var pixels = ctx.getImageData(0, 0, 400, 300);
           filterous.applyInstaToCanvas(pixels)
             .then((newPixels) => {
-              console.log('hoge');
               ctx.putImageData(newPixels, 0, 0);
             });
+        }
+
+        function calcPartsPositions(r, w, h) {
+          // r: currentPosition
+          var o = {};
+
+          var c = 1.3 // 拡大率
+          // 表示する画像の幅、高さ
+          var w = (r[0][0]-r[14][0])*c;
+          var h = w / 7 * 4;
+          // 画像の左下の座標(右上が原点)
+          var gx = r[14][0]*(2/3 + c/2) + r[0][0]*(2/3 - c/2) - r[7][0]/3
+          var gy = r[14][1]*(2/3 + c/2) + r[0][1]*(2/3 - c/2) - r[7][1]/3
+          var rad = Math.atan((r[0][1] - r[14][1])/(r[0][0] - r[14][0]))
+
+          o['boushi'] = {gx: gx, gy: gy, rad: rad, w: w, h: h};
+
+          o['cheek1'] = {
+            gx: (r[26][0] + r[44][0])/2,
+            gy: (r[26][1] + r[44][1])/2,
+            rad: 0,
+            w: (r[1][0] - r[13][0]) / 5,
+            h: (r[1][0] - r[13][0]) / 5 / 7 * 6
+          }
+          o['cheek2'] = {
+            gx: (r[31][0] + r[50][0])/2 + (r[13][0] - r[40][0])/2,
+            gy: (r[31][1] + r[50][1])/2 + (r[13][1] - r[40][1])/2,
+            rad: 0,
+            w: (r[1][0] - r[13][0]) / 5,
+            h: (r[1][0] - r[13][0]) / 5 / 7 * 6
+          }
+
+          o['nose1'] = {
+            gx: r[62][0] + (r[35][0] - r[39][0]) + (r[41][0] - r[62][0]),
+            gy: r[62][1] + (r[35][1] - r[39][1]) + (r[41][1] - r[62][1]),
+            rad: 0,
+            w: (r[39][0] - r[35][0]) * 2,
+            h: (r[39][0] - r[35][0]) * 2 /34 *28,
+          }
+
+          o['head'] = {
+            gx: r[0][0] + (r[41][0] - r[7][0]) + (r[0][0] - r[27][0])*2,
+            gy: r[0][1] + (r[41][1] - r[7][1]) + (r[0][1] - r[27][1])*2,
+            rad: 0,
+            w: (r[14][0] - r[0][0])*2,
+            h: (r[14][0] - r[0][0])*2/10*6,
+          }
+
+          return o
+        }
+
+        function overlayParts(ctx, parts, position) {
+          /**
+            * 画像を回転して指定の位置に描画する
+            */
+          ctx.translate(position.gx, position.gy);
+          ctx.rotate(position.rad);
+          ctx.drawImage(parts, 0, 0, position.w, position.h);
+          ctx.rotate(-position.rad);
+          ctx.translate(-position.gx, -position.gy);
         }
 
 				function drawLoop() {
@@ -219,23 +287,19 @@
 
 					if (ctrack.getCurrentPosition()) {
             var r = ctrack.getCurrentPosition()
-            //console.log(r)
-						//ctrack.draw(overlay);
-            var c = 1.3
-            var w = (r[0][0]-r[14][0])*c;
-            var h = w / 7 * 4;
-            var gx = r[14][0]*(2/3 + c/2) + r[0][0]*(2/3 - c/2) - r[7][0]/3
-            var gy = r[14][1]*(2/3 + c/2) + r[0][1]*(2/3 - c/2) - r[7][1]/3
-            var rad = Math.atan((r[0][1] - r[14][1])/(r[0][0] - r[14][0]))
+            // console.log(r)
+						// ctrack.draw(overlay);
+            var parts = calcPartsPositions(r);
 
-            overlayCC.translate(gx, gy);
-            overlayCC.rotate(rad);
-            overlayCC.drawImage(boushi, 0, 0, w, h);
-            overlayCC.rotate(-rad);
-            overlayCC.translate(-gx, -gy);
+            // overlayParts(overlayCC, boushi, parts['boushi']);
+            overlayParts(overlayCC, cheek, parts['cheek1']);
+            overlayParts(overlayCC, cheek, parts['cheek2']);
+            // console.log(parts['nose1']);
+            overlayParts(overlayCC, nose1, parts['nose1']);
+            overlayParts(overlayCC, head, parts['head']);
 					}
-          filterImage(overlayCC);
-          // console.log('hage2');
+          // インスタフィルター
+          // filterImage(overlayCC);
 				}
 
 				/*********** Code for stats **********/
