@@ -3,6 +3,8 @@ var vid_width = vid.width;
 var vid_height = vid.height;
 var overlay = document.getElementById('overlay');
 var overlayCC = overlay.getContext('2d');
+var drawSkeleton = document.getElementById('drawSkeleton');
+var selectMode = document.getElementById('select');
 
 /*********** Setup of video/webcam and checking for webGL support *********/
 
@@ -187,6 +189,13 @@ function calcPartsPositions(r, w, h) {
     h: Math.sqrt((r[39][0] - r[35][0])**2 + (r[39][1] - r[35][1])**2)*2*28/34,
   }
 
+  o['nose2'] = {
+    gx: r[62][0] + (r[35][0] - r[39][0]) + (r[33][0] - r[37][0])*0.5,
+    gy: r[62][1] + (r[35][1] - r[39][1]) + (r[33][1] - r[37][1])*0.5,
+    rad: Math.atan((r[35][1] - r[39][1])/(r[35][0] - r[39][0])),
+    w: Math.sqrt((r[39][0] - r[35][0])**2 + (r[39][1] - r[35][1])**2)*2,
+    h: Math.sqrt((r[39][0] - r[35][0])**2 + (r[39][1] - r[35][1])**2)*2*28/34,
+  }
     /* 
   o['head'] = {
     gx: r[0][0] + (r[41][0] - r[7][0]) + (r[0][0] - r[27][0])*2,
@@ -230,16 +239,26 @@ function drawLoop() {
   if (ctrack.getCurrentPosition()) {
     var r = ctrack.getCurrentPosition()
     // console.log(r)
-    // ctrack.draw(overlay);
+    if (drawSkeleton.checked) {
+      ctrack.draw(overlay);
+    }
     var parts = calcPartsPositions(r);
 
+    var idx = selectMode.selectedIndex
+    if(selectMode.options[idx].value == 'dog') {
+      overlayParts(overlayCC, cheek, parts['cheek1']);
+      // console.log(parts['cheek1']);
+      overlayParts(overlayCC, cheek, parts['cheek2']);
+      // console.log(parts['nose1']);
+      overlayParts(overlayCC, nose1, parts['nose1']);
+      overlayParts(overlayCC, head, parts['head']);
+    } else if (selectMode.options[idx].value == 'pig') {
+      overlayParts(overlayCC, cheek, parts['cheek1']);
+      overlayParts(overlayCC, cheek, parts['cheek2']);
+      overlayParts(overlayCC, head, parts['head']);
+      overlayParts(overlayCC, nose2, parts['nose2']);
+    }
     // overlayParts(overlayCC, boushi, parts['boushi']);
-    overlayParts(overlayCC, cheek, parts['cheek1']);
-    // console.log(parts['cheek1']);
-    overlayParts(overlayCC, cheek, parts['cheek2']);
-    // console.log(parts['nose1']);
-    overlayParts(overlayCC, nose1, parts['nose1']);
-    overlayParts(overlayCC, head, parts['head']);
   }
   // インスタフィルター
   // filterImage(overlayCC);
