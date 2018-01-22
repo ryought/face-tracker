@@ -171,6 +171,75 @@ module.exports.convolute = function (pixels, weights) {
   return pixels;
 };
 
+console.log('spaceW');
+// 重みフィルターを作る
+var spaceW = {}
+// パラメタ
+var radius = 20;
+var sigmaSpace = radius / 2.04045
+var gaussSpaceCoeff =  -0.5 / (sigmaSpace * sigmaSpace)
+// ループ
+for (var i = 0; i <= radius; i++) {
+  for (var j = 0; j <= radius; j++) {
+    var r = i*i + j*j
+    spaceW[r] = spaceW[r] || Math.exp(r * gaussSpaceCoeff)
+  }
+}
+
+// Bilateral
+module.exports.bilateral = function (pixels, radius, thres) {
+  var d = pixels.data;
+  var sw = pixels.width;
+  var sh = pixels.height;
+  var D = new Uint8Array(sw*sh*4);
+  D.set(d, 0); // コピー
+  // console.log('bilateral', d, D);
+  // number確認
+  // radius *= 1;
+  // thres *= 1;
+
+  // 色重みフィルター
+  var sigmaColor = thres / 255 * Math.sqrt(255 * 255 * 3) / 2.04045,
+      gaussColorCoeff = -0.5 / (sigmaColor * sigmaColor);
+
+  for (var x = radius; x < sw - radius; ++x) {
+    for (var y = radius; y < sh - radius; ++y) {
+      // 各ピクセル(x,y)
+      var sumB = 0, sumG = 0, sumR = 0, sumW = 0;
+      var m = (y*sw + x)*4,
+          r0 = D[m],
+          g0 = D[m+1],
+          b0 = D[m+2];
+
+      for (var k = -radius; k <= radius; ++k) {
+        for (var l = -radius; l <= radius; ++l) {
+          // 各カーネル
+          var n = ((y + l) * sw + (x + k)) * 4,
+            dc = (D[n]-r0)*(D[n]-r0) + (D[n+1]-g0)*(D[n+1]-g0) + (D[n+2]-b0)*(D[n+2]-b0),
+            ds = k * k + l * l;
+          /*
+            dr = D[n] - r0,
+            dg = D[n+1] - g0,
+            db = D[n+2] - b0,
+            */
+
+          // 重みをかける
+          var w = spaceW[ds] * Math.exp(dc * gaussColorCoeff);
+          sumW += w;
+          sumR += D[n] * w;
+          sumG += D[n+1] * w;
+          sumB += D[n+2] * w;
+        }
+      }
+
+      d[m] = sumR / sumW;
+      d[m+1] = sumG / sumW;
+      d[m+2] = sumB / sumW;
+    }
+  }
+  return pixels;
+};
+
 /**
  * References
  * https://en.wikipedia.org/wiki/HSL_and_HSV
@@ -210,7 +279,7 @@ module.exports.applyInstaToCanvas = function (pixels) {
   // var filterous = new Filterous('aaa');
   var newPixels = void 0;
   return new Promise(function (resolve) {
-    var filterName = 'willow';
+    var filterName = 'beauty';
     newPixels = instaFilters[filterName].apply(undefined, [pixels]);
     resolve(newPixels);
   });
@@ -740,6 +809,16 @@ module.exports.charmes = function (pixels) {
   pixels = filters.contrast.apply(undefined, [pixels, 0.05]);
   return pixels;
 };
+
+// Beauty: face beautify filter
+// TODO bilateralフィルタ
+module.exports.beauty = function (pixels) {
+  // pixels = filters.colorFilter.apply(undefined, [pixels, [255, 50, 80, 0.12]]);
+  // pixels = filters.contrast.apply(undefined, [pixels, 0.05]);
+  pixels = filters.bilateral.apply(undefined, [pixels, 20, 20]);
+  return pixels;
+};
+
 
 },{"./filters":1}],4:[function(require,module,exports){
 "use strict";
