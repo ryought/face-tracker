@@ -83,6 +83,24 @@ if (navigator.mediaDevices) {
 
 vid.addEventListener('canplay', enablestart, false);
 
+var canvas;
+/* webgl filter */
+window.onload = function() {
+  // try to create a WebGL canvas (will fail if WebGL isn't supported)
+  try {
+    canvas = fx.canvas();
+  } catch (e) {
+    alert(e);
+    return;
+  }
+  console.log(canvas);
+
+  // convert the image to a texture
+  /*
+  var image = document.getElementById('image');
+  */
+}
+
 /******* multi face tracking ***********/
 var objects = new tracking.ObjectTracker(['face']);
 var faceRegions = {};
@@ -136,11 +154,12 @@ function filterImage(ctx) {
 
 */
   // var ctx = overlayCC;
-  var pixels = ctx.getImageData(0, 0, 400, 300);
-  filterous.applyInstaToCanvas(pixels)
+  var pixels = ctx.getImageData(0, 0, 800, 600);
+  filterous.applyInstaToCanvas(pixels, 'beauty')
     .then((newPixels) => {
       ctx.putImageData(newPixels, 0, 0);
     });
+
 }
 
 function calcPartsPositions(r, w, h) {
@@ -249,7 +268,21 @@ function drawLoop() {
 
   }
   // インスタフィルター
-  filterImage(overlayCC);
+  // filterImage(overlayCC);
+
+  // webgl filter
+  var texture = canvas.texture(overlay);
+  canvas.draw(texture).denoise(20).update();
+  document.getElementById('container').insertBefore(canvas, document.getElementById('overlay'))
+  // var arr = canvas.getPixelArray();
+  // var ctx = canvas._.gl;
+  // console.log(ctx);
+  // var url = canvas.toDataURL('image/png');
+  // var img = new Image();
+  // img.onload = function() {
+  //   overlayCC.drawImage(img, 0, 0);
+  // }
+  // img.src = url
 }
 
 /*********** Code for stats **********/
