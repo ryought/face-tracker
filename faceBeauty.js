@@ -93,7 +93,7 @@ window.onload = function() {
     alert(e);
     return;
   }
-  console.log(canvas);
+  console.log(canvas.width, canvas.height);
 
   // convert the image to a texture
   /*
@@ -254,7 +254,7 @@ function drawLoop() {
   //psrElement.innerHTML = "score :" + ctrack.getScore().toFixed(4);
 
   // カメラの画像を書き出す
-  // overlayCC.drawImage(vid, 0, 0, vid_width, vid_height); 
+  overlayCC.drawImage(vid, 0, 0, vid_width, vid_height); 
 
   if (ctrack.getCurrentPosition()) {
     var r = ctrack.getCurrentPosition()
@@ -275,8 +275,21 @@ function drawLoop() {
   // 2dの表示されてるcanvasにコピーする
   var texture = canvas.texture(vid);
   canvas.draw(texture).denoise(20).update();
+
+  overlayCC.save();
+  overlayCC.beginPath();
+  overlayCC.moveTo(0,0);
+  overlayCC.lineTo(800, 0);
+  overlayCC.lineTo(800, 300);
+  overlayCC.lineTo(0, 300);
+  overlayCC.closePath();
+  overlayCC.clip();
+
   // https://qiita.com/naotaro0123/items/cfe58d1d35359f7de2f8
   overlayCC.drawImage(canvas, 0, 0);
+  console.log(canvas.width, canvas.height);
+
+  overlayCC.restore();
 
   // var arr = canvas.getPixelArray();
   // var ctx = canvas._.gl;
