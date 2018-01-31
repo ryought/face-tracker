@@ -254,7 +254,7 @@ function drawLoop() {
   //psrElement.innerHTML = "score :" + ctrack.getScore().toFixed(4);
 
   // カメラの画像を書き出す
-  overlayCC.drawImage(vid, 0, 0, vid_width, vid_height); 
+  // overlayCC.drawImage(vid, 0, 0, vid_width, vid_height); 
 
   if (ctrack.getCurrentPosition()) {
     var r = ctrack.getCurrentPosition()
@@ -271,9 +271,13 @@ function drawLoop() {
   // filterImage(overlayCC);
 
   // webgl filter
-  var texture = canvas.texture(overlay);
+  // experimental-webglなcanvasに一度フィルタ済みの画像を書く
+  // 2dの表示されてるcanvasにコピーする
+  var texture = canvas.texture(vid);
   canvas.draw(texture).denoise(20).update();
-  document.getElementById('container').insertBefore(canvas, document.getElementById('overlay'))
+  // https://qiita.com/naotaro0123/items/cfe58d1d35359f7de2f8
+  overlayCC.drawImage(canvas, 0, 0);
+
   // var arr = canvas.getPixelArray();
   // var ctx = canvas._.gl;
   // console.log(ctx);
